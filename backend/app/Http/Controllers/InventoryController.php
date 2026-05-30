@@ -22,7 +22,7 @@ class InventoryController extends Controller
 
         DB::beginTransaction();
         try {
-            $product = Product::find($request->product_code);
+            $product = Product::where('product_code',$request->product_code)->first();
 
             // During a stock out,do not allow more than the quentity in the warehouse to be released
             if ($request->status === 'Stock Out' && $product->quantity < $request->quantity) {
