@@ -13,6 +13,7 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 // --- Safe API Routes (It is mandotory to be logged in) ---
 Route::middleware('auth:sanctum')->group(function () {
     
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     // Logout process
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
@@ -26,4 +27,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Purchase Order Routes
     Route::post('/purchase-orders/store', [PurchaseOrderController::class, 'store']);
+
 });
