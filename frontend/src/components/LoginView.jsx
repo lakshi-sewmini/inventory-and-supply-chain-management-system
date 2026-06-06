@@ -15,7 +15,7 @@ const LoginView = ({ onLoginSuccess }) => {
     setErrorMessage('');
 
     try {
-      // API එකට දත්ත යැවීම (/auth/login වෙත - ඔබේ route එකට අනුව)
+      // API එකට දත්ත යැවීම (/auth/login වෙත - route එකට අනුව)
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
         email: email,
         password: password

@@ -42,7 +42,7 @@ class InventoryController extends Controller
                 'product_code' => $request->product_code,
             ]);
 
-            // SDS Automation Rule: automatic updating of stock quantities
+            // automatic updating of stock quantities
             if ($request->status === 'Stock In') {
                 $product->increment('quantity', $request->quantity);
                 $product->update(['status' => 'Available']);

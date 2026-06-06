@@ -26,7 +26,7 @@ class AuthController extends Controller
     return response()->json([
         'message' => 'Login successful!',
         'token' => $token,
-        'role' => $user->role // 👈 මෙතනින් 'Admin' කියලා Capital පිටින්ම React එකට යනවා
+        'role' => $user->role 
     ], 200);
 }
 
@@ -38,4 +38,10 @@ class AuthController extends Controller
             'message' => 'Logged out successfully!'
         ], 200);
     }
+    public function getAllUsers()
+{
+    // Database එකේ ඉන්න ඔක්කොම යූසර්ස්ලාව අරන් JSON එකක් විදිහට දෙනවා
+    $users = User::all();
+    return response()->json($users, 200);
+}
 }

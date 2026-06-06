@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import LoginView from './components/LoginView';
 import DashboardView from './components/Dashboard'; 
-         
- 
+import UserView from './components/UserView';
+import ProductView from './components/ProductView';
+import InventoryView from './components/InventoryView';
+import SupplierView from './components/SupplierView';
+import PurchaseView from './components/PurchaseOrdersView'; 
+import StockAlertView from './components/StockAlertsView';
+import SettingView from './components/SettingView';
 
 function App() {
-  // 1. මුලින්ම localStorage එකේ token එකක් තිබේදැයි බලන්න. තිබේ නම් 'dashboard' වෙත යන්න.
   const [currentPage, setCurrentPage] = useState(localStorage.getItem('token') ? 'dashboard' : 'login'); 
   const [userRole, setUserRole] = useState(localStorage.getItem('userRole') || null); 
 
-  // 2. ලොගින් සාර්ථක වූ විට සිදුවන දේ - මෙම ශ්‍රිතය නිවැරදිව අර්ථ දක්වා ඇත
   const handleLoginSuccess = (role) => {
     setUserRole(role); 
     setCurrentPage('dashboard'); 
   };
 
-  // 3. ලොග් අවුට් වීමේදී සිදුවන දේ
   const handleLogout = () => {
     setUserRole(null);
     localStorage.removeItem('token'); 
@@ -24,10 +26,37 @@ function App() {
     setCurrentPage('login'); 
   };
 
+  // වත්මන් පිටුවට අනුව අදාළ Component එක තෝරාගැනීම
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard': 
+        return <DashboardView userRole={userRole} />;
+      case 'user': 
+        return <UserView />;
+      case 'product': 
+        return <ProductView />;
+      case 'inventory': 
+        return <InventoryView />;
+      case 'supplier': 
+        return <SupplierView />;
+        
+      // 👈 මෙන්න මේ කොටස් අපි නිවැරදිව යාවත්කාලීන කළා
+      case 'purchase': 
+        return <PurchaseView />;
+        
+      case 'stock': // Sidebar එකේ තියෙන්නේ 'stock' කියලා නිසා මේ නම මෙතනට වැදගත් වේ
+        return <StockAlertView />;
+        
+      case 'setting': 
+        return <SettingView />;
+        
+      default: 
+        return <DashboardView userRole={userRole} />;
+    }
+  };
+
   return (
     <div className="flex h-screen w-full bg-[#f4f7f6] font-sans overflow-hidden">
-      
-      {/* සයිඩ්බාර් එක පෙන්වීම */}
       {currentPage !== 'login' && (
         <div className="w-[18%] h-full shrink-0">
           <Sidebar 
@@ -39,20 +68,11 @@ function App() {
         </div>
       )}
 
-      {/* ප්‍රධාන අන්තර්ගතය */}
-      <div className={currentPage === 'login' ? "w-full h-full" : "w-[82%] h-full"}>
-        
-        {/* මෙතැනදී handleLoginSuccess ශ්‍රිතය LoginView වෙත යවයි */}
-        {currentPage === 'login' && <LoginView onLoginSuccess={handleLoginSuccess} />}
-        
-        {currentPage === 'dashboard' && <DashboardView userRole={userRole} />}
-
-        
-        
-        {['user','product','inventory', 'supplier', 'purchase', 'stock', 'setting'].includes(currentPage) && (
-          <div className="p-10 text-xl font-bold text-gray-400 h-full flex items-center justify-center">
-            ⚙️ {currentPage.toUpperCase()} page is under construction...
-          </div>
+      <div className={currentPage === 'login' ? "w-full h-full" : "w-[82%] h-full overflow-y-auto"}>
+        {currentPage === 'login' ? (
+          <LoginView onLoginSuccess={handleLoginSuccess} />
+        ) : (
+          renderPage()
         )}
       </div>
     </div>

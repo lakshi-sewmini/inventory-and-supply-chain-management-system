@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\DashboardController;
 
 // --- common API Routes ---
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -27,5 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Purchase Order Routes
     Route::post('/purchase-orders/store', [PurchaseOrderController::class, 'store']);
+
+    Route::get('/users', [App\Http\Controllers\AuthController::class, 'getAllUsers']);
+
+
 
 });
