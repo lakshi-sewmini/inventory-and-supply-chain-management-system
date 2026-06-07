@@ -1,53 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const StockAlertView = () => {
-  const [alerts, setAlerts] = useState([]);
+const StockAlertsView = () => {
+  const [lowStockProducts, setLowStockProducts] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    axios.get(`${import.meta.env.VITE_API_BASE_URL}/stock-alerts`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(res => setAlerts(res.data))
-    .catch(err => console.error("Error fetching stock alerts:", err));
+    fetchLowStock();
   }, []);
 
+  const fetchLowStock = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/products`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Reorder Level එකට වඩා Quantity එක සමාන හෝ අඩු බඩු ටික විතරක් ගන්නවා
+      const alerts = res.data.filter(p => (p.quantity || 0) <= (p.reorder_level || 10));
+      setLowStockProducts(alerts);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="p-8 w-full">
-      <h2 className="text-2xl font-bold mb-6 text-red-600">⚠️ Low Stock Alerts</h2>
-      <div className="bg-white rounded-lg border border-red-200 shadow-sm overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-red-50 border-b border-red-200 text-red-700 text-sm font-semibold">
-            <tr>
-              <th className="p-3">Product Code</th>
-              <th className="p-3">Product Name</th>
-              <th className="p-3">Available Qty</th>
-              <th className="p-3">Reorder Level</th>
-              <th className="p-3">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm">
-            {alerts.length === 0 ? (
-              <tr><td colSpan="5" className="p-4 text-center text-green-600 font-bold">✅ All stocks are stable! No alerts.</td></tr>
-            ) : (
-              alerts.map(item => (
-                <tr key={item.product_code} className="border-b bg-red-50/30 hover:bg-red-50 text-gray-800">
-                  <td className="p-3 font-bold">{item.product_code}</td>
-                  <td className="p-3">{item.product_name}</td>
-                  <td className="p-3 text-red-600 font-bold">{item.current_stock}</td>
-                  <td className="p-3 font-semibold text-gray-500">{item.reorder_level}</td>
-                  <td className="p-3">
-                    <button className="bg-red-500 text-white text-xs px-3 py-1 rounded font-bold uppercase tracking-wider hover:bg-red-600">Reorder</button>
+    <div className="p-6 bg-[#f8fafc] min-h-screen text-gray-800">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 flex items-center">
+              <span className="mr-2 text-rose-500 animate-bounce">⚠️</span> Low Stock Alerts
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">Items that require urgent purchasing or restocking.</p>
+          </div>
+          <span className="bg-rose-50 text-rose-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-rose-100">
+            {lowStockProducts.length} Items Critical
+          </span>
+        </div>
+
+        {/* Alerts Table */}
+        <div className="overflow-x-auto rounded-lg border border-slate-100">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-50/70 border-b border-slate-200 text-slate-500 font-semibold">
+                <th className="p-4">Product Code</th>
+                <th className="p-4">Product Name</th>
+                <th className="p-4">Category</th>
+                <th className="p-4 text-center">Current Qty</th>
+                <th className="p-4 text-center">Reorder Level</th>
+                <th className="p-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {lowStockProducts.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-slate-400 bg-white font-medium text-xs">
+                    🎉 Excellent! All items are well stocked above reorder levels.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                lowStockProducts.map((p, i) => (
+                  <tr key={i} className="hover:bg-rose-50/20 transition-colors">
+                    <td className="p-4 font-bold text-slate-700">{p.product_code}</td>
+                    <td className="p-4 text-slate-600">{p.product_name}</td>
+                    <td className="p-4 text-slate-400 text-xs font-medium">{p.brand || 'General'}</td>
+                    <td className="p-4 text-center">
+                      <span className="px-2.5 py-1 rounded-md font-bold bg-rose-50 text-rose-600 text-xs">
+                        {p.quantity || 0}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center text-slate-500 font-semibold text-xs">{p.reorder_level || 10}</td>
+                    <td className="p-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        (p.quantity || 0) === 0 ? 'bg-rose-600 text-white' : 'bg-amber-50 text-amber-600 border border-amber-100'
+                      }`}>
+                        {(p.quantity || 0) === 0 ? 'Out of Stock' : 'Low Stock'}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-export default StockAlertView;
+export default StockAlertsView;
