@@ -9,11 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+   public function up(): void
     {
         Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->id();
-            $table->morphs('tokenable');
+            
+            // stringMorphs වෙනුවට මේ විදිහට columns දෙක වෙන වෙනම දෙන්න:
+            $table->string('tokenable_type');
+            $table->string('tokenable_id'); // මෙය string (VARCHAR) එකක් ලෙස හැදේ (U001, U002 වැනි ID සඳහා)
+            
             $table->text('name');
             $table->string('token', 64)->unique();
             $table->text('abilities')->nullable();

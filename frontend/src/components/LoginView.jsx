@@ -12,6 +12,11 @@ const LoginView = ({ onLoginSuccess }) => {
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [modalType, setModalType] = useState('reset'); // 'reset' හෝ 'create'
 
+  // 📝 Support Form එකට අදාළ States
+  const [supportEmail, setSupportEmail] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportLoading, setSupportLoading] = useState(false);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -41,13 +46,45 @@ const LoginView = ({ onLoginSuccess }) => {
         setErrorMessage("Cannot connect to Laravel server!");
       }
     } finally {
-      loading(false);
+      setLoading(false); // 💡 typo එක නිවැරදි කරන ලදී (setloading -> setLoading)
+    }
+  };
+
+  // 📥 Laravel Backend එකට Support Request එක යවන Function එක
+  const handleSupportSubmit = async (e) => {
+    e.preventDefault();
+    setSupportLoading(true);
+
+    // modalType එක අනුව Backend එකට යන string එක තීරණය කිරීම
+    const requestTypeString = modalType === 'reset' ? 'Password Reset' : 'Account Creation';
+
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/support-tickets`, {
+        user_email: supportEmail,
+        request_type: requestTypeString,
+        message: supportMessage
+      });
+
+      if (response.data.success) {
+        alert(`Success! Your request for ${requestTypeString} has been sent to the IT Admin.`);
+        // Form එක clear කර Modal එක වසා දැමීම
+        setSupportEmail('');
+        setSupportMessage('');
+        setShowAdminModal(false);
+      }
+    } catch (error) {
+      console.error("Error submitting support request", error);
+      alert("Something went wrong. Please check your backend connection!");
+    } finally {
+      setSupportLoading(false);
     }
   };
 
   // 📞 ඇඩ්මින් කනෙක්ට් කරගන්නා බටන් එක ක්ලික් වූ විට ක්‍රියාත්මක වන ෆන්ක්ෂන් එක
   const openAdminContact = (type) => {
     setModalType(type);
+    setSupportEmail(''); // කලින් ගහපු දත්ත clear කිරීමට
+    setSupportMessage('');
     setShowAdminModal(true);
   };
 
@@ -146,7 +183,7 @@ const LoginView = ({ onLoginSuccess }) => {
         </div>
       </div>
 
-      {/* 🛡️ [POP-UP MODAL]: දෙකටම පොදුවේ ලස්සනට වැඩ කරන ඇඩ්මින් කොන්ටැක්ට් පැනලය */}
+      {/* 🛡️ [POP-UP MODAL]: ඇතුළත Form එක සජීවීව වැඩ කරන ලෙස සකසා ඇත */}
       {showAdminModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-slate-100 transform scale-100 transition-all">
@@ -164,38 +201,66 @@ const LoginView = ({ onLoginSuccess }) => {
               </div>
             </div>
 
-            {/* Dynamic Content Description */}
-            <div className="mt-4 space-y-4">
+            {/* Form Content */}
+            <form onSubmit={handleSupportSubmit} className="mt-4 space-y-4">
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
                 {modalType === 'reset' 
-                  ? 'For security reasons, automatic password resets are disabled. Please contact the IT admin to request a password override.' 
-                  : 'If you are a newly joined staff member or a supplier, please contact the IT administrator to provision your login account.'
+                  ? 'For security reasons, automatic password resets are disabled. Please enter your email and reason to request an override.' 
+                  : 'If you are a newly joined staff member or a supplier, please fill out your details to request an account.'
                 }
               </p>
 
-              {/* Admin Contact Information */}
-              <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500 font-bold">Admin Email:</span>
-                  <a href="mailto:admin@smartinv.com" className="text-[#149393] font-bold hover:underline">admin@smartinv.com</a>
+              {/* Input Fields */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 mb-1">
+                    {modalType === 'reset' ? 'Registered Email' : 'Your Contact Email'}
+                  </label>
+                  <input 
+                    type="email"
+                    value={supportEmail}
+                    onChange={(e) => setSupportEmail(e.target.value)}
+                    required
+                    placeholder="name@example.com"
+                    className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-800 border border-slate-200 rounded-lg focus:outline-none focus:border-[#149393] transition-all"
+                  />
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500 font-bold">IT Hotline:</span>
-                  <span className="text-slate-800 font-bold">+94 11 234 5678</span>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-500 mb-1">
+                    {modalType === 'reset' ? 'Reason for Override' : 'Full Name & Job Role'}
+                  </label>
+                  <textarea 
+                    value={supportMessage}
+                    onChange={(e) => setSupportMessage(e.target.value)}
+                    required
+                    rows="3"
+                    placeholder={modalType === 'reset' ? "Briefly explain why you need a reset..." : "E.g., Kamal Perera - Supplier"}
+                    className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-800 border border-slate-200 rounded-lg focus:outline-none focus:border-[#149393] transition-all resize-none"
+                  ></textarea>
                 </div>
               </div>
-            </div>
 
-            {/* Action Buttons */}
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowAdminModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
+              {/* Action Buttons */}
+              <div className="mt-6 flex justify-end space-x-2 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={supportLoading}
+                  className={`px-4 py-2 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                    modalType === 'reset' ? 'bg-[#149393] hover:bg-[#107575]' : 'bg-emerald-600 hover:bg-emerald-700'
+                  } disabled:bg-gray-400`}
+                >
+                  {supportLoading ? 'Sending...' : 'Submit Request'}
+                </button>
+              </div>
+            </form>
 
           </div>
         </div>

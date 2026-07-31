@@ -23,7 +23,7 @@ class Supplier extends Model
     public function products()
     {
           // to get the list of products provided by the supplier
-    return $this->belongsToMany(Product::class, 'supplier_products', 'supplier_id', 'product_code')
+    return $this->belongsToMany(Products::class, 'supplier_products', 'supplier_id', 'product_code')
                 ->withPivot('supplied_date', 'status') // additional fields in the pivot table
                 ->withTimestamps();
     }

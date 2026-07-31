@@ -11,7 +11,7 @@ class PurchaseOrder extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'po_number', 'order_date', 'expected_date', 'total_amount', 'tax', 'status', 'supplier_id', 'user_id'
+        'po_number', 'order_date', 'expected_date', 'total_amount', 'tax', 'status', 'supplier_id', 'user_id','magic_token'
     ];
 
     public function supplier()
@@ -24,9 +24,12 @@ class PurchaseOrder extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function items()
-    {
-        return $this->hasMany(PurchaseOrderItem::class, 'po_number', 'po_number');
-    }
+    // app/Models/PurchaseOrder.php
+
+public function items()
+{
+    // foreign_key = 'po_number', local_key = 'po_number'
+    return $this->hasMany(PurchaseOrderItem::class, 'po_number', 'po_number');
+}
 }
 

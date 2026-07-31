@@ -12,10 +12,12 @@ class PurchaseOrderItem extends Model
         'po_number', 'product_code', 'quantity', 'unit_price', 'Total'
     ];
 
-    public function purchaseOrder()
-    {
-        return $this->belongsTo(PurchaseOrder::class, 'po_number', 'po_number');
-    }
+    // app/Models/PurchaseOrderItem.php
+
+public function purchaseOrder()
+{
+    return $this->belongsTo(PurchaseOrder::class, 'po_number', 'po_number');
+}
 
     public function product()
     {

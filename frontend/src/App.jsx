@@ -10,19 +10,38 @@ import ReportsView from './components/ReportsView';
 import UserView from './components/UserView';
 import SettingView from './components/SettingView';
 import LoginView from './components/LoginView'; 
+import AdminTickets from "./components/AdminTickets"; 
+import PublicPOTracking from "./components/PublicPOTracking"; // 🌐 1. Public View එක import කරගන්නවා
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // ⏳ Loading ස්ටේට් එක
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // 🌐 2. Public Tracking ලින්ක් එකක්ද කියලා බලාගන්න State දෙකක්
+  const [isPublicRoute, setIsPublicRoute] = useState(false);
+  const [publicToken, setPublicToken] = useState('');
 
   useEffect(() => {
+    // 🌐 3. URL එක චෙක් කරනවා සප්ලයර්ගේ Magic Link එකක්ද කියලා
+    // උදා: http://localhost:5173/public/po-tracking/XYZ_TOKEN
+    const path = window.location.pathname; 
+    if (path.startsWith('/public/po-tracking/')) {
+      const tokenFromUrl = path.split('/public/po-tracking/')[1];
+      if (tokenFromUrl) {
+        setIsPublicRoute(true);
+        setPublicToken(tokenFromUrl);
+        setIsLoading(false);
+        return; // මේක public route එකක් නම් ලොගින් චෙක් කරන්න ඕන නෑ, මෙතනින් නතර කරනවා
+      }
+    }
+
+    // 🔒 සාමාන්‍ය ඇඩ්මින්/ස්ටාෆ් ලොගින් චෙක් කිරීම
     const token = localStorage.getItem('token');
     const storedRole = localStorage.getItem('userRole'); 
     const storedName = localStorage.getItem('userName');
 
-    // 🛡️ 'undefined' කියන String එක වැටීම වැළැක්වීමේ ආරක්ෂාව
     if (token && storedRole && storedRole !== 'undefined') {
       setIsAuthenticated(true);
       setUser({ 
@@ -30,18 +49,16 @@ function App() {
         role: storedRole 
       });
 
-      // 🔄 [FIX]: ලොග් වෙලා ඉන්නේ Supplier නම් එයාට Dashboard පෙන්වන්න බැරි නිසා Default View එක purchase කරනවා
       if (storedRole.toLowerCase() === 'supplier') {
         setCurrentView('purchase');
       }
     } else {
       setIsAuthenticated(false);
     }
-    setIsLoading(false); // Loading අවසන්
+    setIsLoading(false);
   }, []);
 
   const handleLogout = () => {
-    // 🔒 ආරක්ෂිතව අදාළ Keys පමණක් ඉවත් කිරීම
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');
@@ -52,43 +69,38 @@ function App() {
     alert('Logged out successfully!');
   };
 
-  // 🔐 Use Case Diagram සහ ඔබේ රූල්ස් වලට අනුව Views ආරක්ෂා කිරීම
   const renderView = () => {
-    // Backend එකෙන් එන අකුරු (Capital/Simple) ප්‍රශ්න නැති වෙන්න lowercase කරනවා
     const userRole = (user?.role || 'Staff').toLowerCase();
 
     switch (currentView) {
       case 'dashboard':
-        // 📊 Dashboard එක බලන්න පුළුවන් Admin, Manager හෝ Staff ට විතරයි (Supplier ට බැහැ)
         if (userRole === 'supplier') {
           return <PurchaseOrdersView />;
         }
         return <DashboardView userRole={user?.role || 'Staff'} />;
 
       case 'products':
-        // 📦 Products බලන්න පුළුවන් Admin, Manager සහ Staff ට විතරයි
         if (userRole === 'supplier') return <PurchaseOrdersView />;
-        return <ProductView />;
+        return <ProductView user={user} />;
 
-      case 'inventory':
-        // 🔄 Inventory බලන්න පුළුවන් Admin, Manager, Staff සහ Stock Keeper ට විතරයි
-        if (userRole === 'supplier') return <PurchaseOrdersView />;
-        return <InventoryView />;
+case 'inventory':
+  if (userRole === 'supplier') return <PurchaseOrdersView />;
+  // 💡 මෙතනට user={{ role: userRole }} එකතු කරන්න
+  return <InventoryView user={{ role: userRole }} />;
 
       case 'suppliers':
-        // 🏢 Suppliers මෙනු එක Staff ට සහ Admin/Manager ට වැඩ කරයි
         if (userRole === 'supplier') return <PurchaseOrdersView />;
         return <SupplierView />;
 
       case 'purchase':
-        // 🧾 Purchase Orders බලන්න Admin, Manager, Staff සහ Supplier හැමෝටම පුළුවන්
         return <PurchaseOrdersView />;
       
-      // Reports බලන්න පුළුවන් Admin සහ Manager දෙන්නටම විතරයි
       case 'reports':
         return (userRole === 'admin' || userRole === 'manager') ? <ReportsView /> : <DashboardView userRole={user?.role || 'Staff'} />;
       
-      // Users සහ Settings අයිති Admin ට විතරයි
+      case 'tickets':
+        return userRole === 'admin' ? <AdminTickets /> : <DashboardView userRole={user?.role || 'Staff'} />;
+
       case 'users':
         return userRole === 'admin' ? <UserView /> : <DashboardView userRole={user?.role || 'Staff'} />;
       case 'settings':
@@ -100,6 +112,7 @@ function App() {
     }
   };
 
+  // Loading Screen
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
@@ -108,11 +121,16 @@ function App() {
     );
   }
 
+  // 🌐 4. [වැදගත්ම කොටස]: Public route එකක් නම් සයිඩ්බාර් නැතුව කෙලින්ම සප්ලයර් පේජ් එක විතරක් රෙන්ඩර් කරනවා
+  if (isPublicRoute) {
+    return <PublicPOTracking token={publicToken} />;
+  }
+
+  // ලොගින් වී නොමැති නම් ලොගින් පේජ් එක
   if (!isAuthenticated) {
     return (
       <LoginView 
         onLoginSuccess={(token, role, name) => {
-          // 🛡️ සේව් වීමට පෙර undefined වීම වළක්වන අවසාන පවුර
           const verifiedRole = role || 'Staff'; 
           const verifiedName = name || 'User';
 
@@ -123,7 +141,6 @@ function App() {
           setUser({ name: verifiedName, role: verifiedRole });
           setIsAuthenticated(true);
 
-          // 🚀 Supplier කෙනෙක් සාර්ථකව ලොග් වුණොත් එයාට කෙලින්ම Purchase Orders ටැබ් එක පෙන්වීම
           if (verifiedRole.toLowerCase() === 'supplier') {
             setCurrentView('purchase');
           } else {
@@ -134,6 +151,7 @@ function App() {
     );
   }
 
+  // සාමාන්‍ය ඇඩ්මින් ඩෑෂ්බෝඩ් එක (සයිඩ්බාර් එකත් එක්ක)
   return (
     <div className="min-h-screen bg-[#f8fafc] flex">
       <Sidebar 

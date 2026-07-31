@@ -63,4 +63,8 @@ class User extends Authenticatable
     {
     return $this->hasMany(StockTransaction::class, 'user_id', 'id');
     }
+
+    protected $primaryKey = 'user_id';
+    public $incrementing = false; // user_id එක auto-increment (1, 2, 3...) නොවන නිසා
+    protected $keyType = 'string'; // user_id එක string (U001) නිසා
 }
