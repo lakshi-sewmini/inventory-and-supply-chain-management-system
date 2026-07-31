@@ -7,7 +7,7 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user }) => {
   // 📋 නිවැරදි කරන ලද මෙනු ලැයිස්තුව (Business Logic & Space Bug Fixed)
   const allMenuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊', roles: ['Admin', 'Manager', 'StockKeeper', 'Staff'] },
-  { id: 'products', label: 'Products', icon: '📦', roles: ['Admin', 'Manager', 'StockKeeper', 'Staff'] }, // 👈 Staff ටත් දුන්නා (View කරන්න)
+  { id: 'products', label: 'Products', icon: '📦', roles: ['Admin', 'Manager', 'StockKeeper', 'Staff'] }, 
   { id: 'inventory', label: 'Stock In / Out', icon: '🔄', roles: ['Admin', 'Manager', 'StockKeeper','staff'] },
   { id: 'suppliers', label: 'Suppliers', icon: '🏢', roles: ['Admin', 'Manager'] },
   { id: 'purchase', label: 'Purchase Orders', icon: '🧾', roles: ['Admin', 'Manager'] },
@@ -17,14 +17,14 @@ const Sidebar = ({ currentView, setCurrentView, handleLogout, user }) => {
   { id: 'tickets', label: 'Support Requests', icon: '🛡️', roles: ['Admin'] },
 ];
 
-  // 🔍 ලොග් වෙලා ඉන්න යූසර්ගේ Role එක අනුව Button List එක හරියටම Filter කිරීම
+  //  ලොග් වෙලා ඉන්න යූසර්ගේ Role එක අනුව Button List එක හරියටම Filter කිරීම
   const allowedMenuItems = allMenuItems.filter(item => {
     const rawRole = user?.role || 'Staff';
     
-    // 💡 database එකෙන් 'Stock Keeper', 'stock_keeper' හෝ 'stockkeeper' ආවත් Bug එකක් නොවී check කිරීමට
+    //  database එකෙන් 'Stock Keeper', 'stock_keeper' හෝ 'stockkeeper' ආවත් Bug එකක් නොවී check කිරීමට
     const cleanRole = rawRole.replace(/[\s_]/g, '').toLowerCase(); 
     
-    // Admin ට හැමදේම පේනවා
+    //Admin ට හැමදේම පේනවා
     if (cleanRole === 'admin') return true;
     
     // අදාළ Array එක ඇතුළේ Role එක තියෙනවාද කියා සසඳයි
